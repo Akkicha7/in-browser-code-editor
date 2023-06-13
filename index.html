@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A lightweight, in-browser code editor for HTML, CSS, and JavaScript with real-time preview.">
+    
+    <!--
+      This editor is part of an interconnected system.
+      Configuration for integration with other services, like the 'Text-Based Adventure Game' asset pipeline,
+      is managed via js/config.js.
+    -->
+
+    <title>In-Browser Code Editor</title>
+
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📝</text></svg>">
+</head>
+<body>
+
+    <header class="app-header">
+        <h1>In-Browser Code Editor</h1>
+        <p>A simple, client-side editor for web development.</p>
+    </header>
+
+    <main class="main-container">
+        <section class="editor-pane" aria-labelledby="editor-heading">
+            <h2 id="editor-heading" class="sr-only">Code Editor</h2>
+            <div class="editor-tabs" role="tablist" aria-label="Code language selector">
+                <button id="html-tab" class="tab-button active" type="button" role="tab" aria-selected="true" aria-controls="code-editor" data-lang="html">HTML</button>
+                <button id="css-tab" class="tab-button" type="button" role="tab" aria-selected="false" aria-controls="code-editor" data-lang="css">CSS</button>
+                <button id="js-tab" class="tab-button" type="button" role="tab" aria-selected="false" aria-controls="code-editor" data-lang="js">JavaScript</button>
+            </div>
+            <div class="editor-wrapper">
+                <div id="line-numbers" class="line-numbers" aria-hidden="true">
+                    <span>1</span>
+                </div>
+                <!-- 
+                    Using a textarea for simplicity and broad browser compatibility.
+                    It's paired with a div for line numbers and will be enhanced by syntax-highlighter.js.
+                    For production, a more robust solution like CodeMirror or Monaco would be considered.
+                -->
+                <textarea 
+                    id="code-editor"
+                    class="code-editor"
+                    wrap="off"
+                    autocorrect="off"
+                    autocapitalize="off"
+                    spellcheck="false"
+                    aria-label="Code input area"
+                    aria-multiline="true"
+                    role="textbox"
+                ></textarea>
+            </div>
+        </section>
+
+        <section class="preview-pane" aria-labelledby="preview-heading">
+            <h2 id="preview-heading" class="sr-only">Live Preview</h2>
+            <div class="preview-toolbar">
+                <span>Live Preview</span>
+            </div>
+            <!-- 
+                The iframe is sandboxed to prevent the previewed code from accessing parent window resources,
+                enhancing security. 'allow-scripts' is necessary to run the user's JavaScript.
+            -->
+            <iframe 
+                id="preview-frame" 
+                class="preview-frame"
+                title="Live preview of the code"
+                sandbox="allow-scripts"
+            ></iframe>
+        </section>
+    </main>
+
+    <footer class="app-footer">
+        <p>&copy; 2024 Your Company. All rights reserved.</p>
+        <p>This editor can be used to customize assets for the <a href="#" title="Link to the other project">Text-Based Adventure Game</a>.</p>
+    </footer>
+
+    <!-- Scripts are loaded at the end of the body for faster page rendering -->
+    <!-- Configuration for the editor and potential API endpoints -->
+    <script src="js/config.js"></script>
+    <!-- Handles syntax highlighting logic -->
+    <script src="js/syntax-highlighter.js"></script>
+    <!-- Main application logic: event handling, preview updates, etc. -->
+    <script src="js/main.js" defer></script>
+
+</body>
+</html>
