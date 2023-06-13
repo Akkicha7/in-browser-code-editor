@@ -1,0 +1,52 @@
+```json
+{
+  "name": "in-browser-code-editor",
+  "version": "1.0.0",
+  "description": "A lightweight, client-side code editor with syntax highlighting and real-time preview. Serves as the primary editing interface for the Text-Based Adventure Game level builder.",
+  "main": "js/main.js",
+  "private": true,
+  "scripts": {
+    "start": "http-server -c-1 -o",
+    "lint": "eslint js/**/*.js",
+    "test": "echo \"Error: no test specified\" && exit 0",
+    "ci": "npm run lint"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/username/in-browser-code-editor.git"
+  },
+  "keywords": [
+    "code-editor",
+    "syntax-highlighting",
+    "html",
+    "css",
+    "javascript",
+    "client-side",
+    "vanilla-js",
+    "web-component"
+  ],
+  "author": "Your Name <you@example.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/username/in-browser-code-editor/issues"
+  },
+  "homepage": "https://github.com/username/in-browser-code-editor#readme",
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.29.1",
+    "http-server": "^14.1.1"
+  },
+  "config": {
+    "interconnectedServices": {
+      "adventureGame": {
+        "name": "Text-Based Adventure Game",
+        "levelSchemaUrl": "https://api.example.com/adventure-game/v1/schemas/level.json"
+      }
+    }
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
+```
