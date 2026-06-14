@@ -19,7 +19,7 @@ const debounce = (func, delay) => {
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- State Management ---
-    // This object holds the raw text for all three panels in memory
+    // === this is added as a 'cental memory store ' to tarck the content of 3 lang tabs(html,css,js) ===
     let codeState = {
         html: '\n<h1>Hello World</h1>',
         css: '/* Write your CSS here */\nh1 {\n    color: slateblue;\n}',
@@ -98,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateLineNumbers();
         updatePreview();
 
-        // 3. === FEATURE REQUIREMENT: Persist data locally ===
+        // === this is a reuied feature that auto-save the updated state to store in local storage ===
         localStorage.setItem('in_browser_editor_code', JSON.stringify(codeState));
     };
 

@@ -4,6 +4,8 @@
  */
 
 /* --- CSS Variables (Dark Pro Theme) --- */
+
+/* custom layout overrides to support the tabbed layout structure and split-screen preview  */
 :root {
     --font-family-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     --font-family-mono: 'Fira Code', 'Consolas', 'Courier New', Courier, monospace;
