@@ -58,6 +58,7 @@
             <h2 id="preview-heading" class="sr-only">Live Preview</h2>
             <div class="preview-toolbar">
                 <span>Live Preview</span>
+                <button id="clear-editor-btn" type="button" style="margin-left: auto; cursor: pointer;">Clear Editor</button>
             </div>
             <!-- 
                 The iframe is sandboxed to prevent the previewed code from accessing parent window resources,
@@ -78,12 +79,15 @@
     </footer>
 
     <!-- Scripts are loaded at the end of the body for faster page rendering -->
+
+    <!-- ""here on the following 3 script tag i added type=module to prevent the browser crashing"""-->
+
     <!-- Configuration for the editor and potential API endpoints -->
-    <script src="js/config.js"></script>
+    <script src="js/config.js" type="module"></script>  
     <!-- Handles syntax highlighting logic -->
-    <script src="js/syntax-highlighter.js"></script>
+    <script src="js/syntax-highlighter.js" type="module"></script>
     <!-- Main application logic: event handling, preview updates, etc. -->
-    <script src="js/main.js" defer></script>
+    <script src="js/main.js" type="module"></script>
 
 </body>
 </html>

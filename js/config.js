@@ -143,3 +143,7 @@ const config = {
 // This is a best practice for production code to prevent accidental modification
 // of configuration at runtime, which could lead to unpredictable behavior.
 export default Object.freeze(config);
+
+// for resolving the Uncaught Syntaxerror debounce delay and tab size variables are add here 
+export const DEBOUNCE_DELAY = 300; 
+export const TAB_SIZE = 4;

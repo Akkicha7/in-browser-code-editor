@@ -1,27 +1,21 @@
 /**
  * style.css
- *
- * Main stylesheet for the In-Browser Code Editor.
- * This file defines the layout, theme, and styling for all components,
- * including the editor, line numbers, preview pane, and syntax highlighting.
+ * Unified & Fixed Stylesheet for the In-Browser Code Editor.
  */
 
-/* --- CSS Variables (Theme) --- */
-/* A dark theme inspired by popular code editors. */
+/* --- CSS Variables (Dark Pro Theme) --- */
 :root {
-    --font-family-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
-        Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    --font-family-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     --font-family-mono: 'Fira Code', 'Consolas', 'Courier New', Courier, monospace;
 
-    --bg-color: #1e1e1e;
-    --editor-bg-color: #252526;
-    --preview-bg-color: #ffffff;
-    --panel-border-color: #3c3c3c;
-    --header-bg-color: #333333;
-    --text-color: #d4d4d4;
-    --line-number-color: #858585;
-    --scrollbar-thumb-color: #555;
-    --scrollbar-track-color: #333;
+    --bg-dark: #1e1e1e;
+    --editor-bg: #252526;
+    --tab-bg-active: #252526;
+    --tab-bg-inactive: #2d2d2d;
+    --border-color: #3c3c3c;
+    --text-main: #d4d4d4;
+    --text-muted: #858585;
+    --accent-color: #007acc; /* VS Code Blue */
     --caret-color: #aeafad;
 
     /* Syntax Highlighting Colors */
@@ -30,19 +24,11 @@
     --token-tag: #569cd6;
     --token-attr-name: #9cdcfe;
     --token-attr-value: #ce9178;
-    --token-string: #ce9178;
-    --token-selector: #d7ba7d;
-    --token-property: #569cd6;
     --token-keyword: #c586c0;
-    --token-function: #dcdcaa;
-    --token-number: #b5cea8;
-    --token-entity: #569cd6;
 }
 
-/* --- Global Styles & Reset --- */
-*,
-*::before,
-*::after {
+/* --- Global Reset --- */
+*, *::before, *::after {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
@@ -50,179 +36,189 @@
 
 body {
     font-family: var(--font-family-sans);
-    background-color: var(--bg-color);
-    color: var(--text-color);
-    overflow: hidden; /* Prevent body scrollbars, panels will handle their own */
-}
-
-/* --- Main Layout --- */
-.container {
-    display: flex;
+    background-color: var(--bg-dark);
+    color: var(--text-main);
     height: 100vh;
-    width: 100vw;
-}
-
-.editor-panel,
-.preview-panel {
-    flex: 1;
-    min-width: 0; /* Prevents flex items from overflowing */
-    height: 100%;
-    overflow: hidden;
     display: flex;
     flex-direction: column;
-}
-
-.editor-panel {
-    background-color: var(--editor-bg-color);
-    border-right: 2px solid var(--panel-border-color);
-}
-
-.panel-header {
-    padding: 0.5rem 1rem;
-    background-color: var(--header-bg-color);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    font-size: 0.8rem;
-    flex-shrink: 0;
-    border-bottom: 1px solid var(--panel-border-color);
-}
-
-/* --- Editor Area --- */
-.editor-area {
-    position: relative;
-    flex-grow: 1;
     overflow: hidden;
 }
 
-/*
- * The editor uses a layered approach for performance and simplicity:
- * 1. A <pre><code> block for syntax highlighting (bottom layer).
- * 2. A <textarea> for user input (top layer).
- * The textarea has a transparent text color and background, so the user sees
- * the highlighted code underneath but interacts with the native textarea.
- * Both elements must have identical font, padding, and scroll positions
- * to ensure the text and cursor align perfectly.
- */
-.editor-area > textarea,
-.editor-area > pre {
+/* --- Layout Header & Footer --- */
+.app-header {
+    background-color: #333333;
+    padding: 10px 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+.app-header h1 { font-size: 1.2rem; color: #fff; }
+.app-header p { font-size: 0.85rem; color: var(--text-muted); }
+
+.app-footer {
+    background-color: #333333;
+    padding: 8px 20px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border-color);
+}
+.app-footer a { color: var(--accent-color); text-decoration: none; }
+
+/* --- Core Workspace Split Screen --- */
+.main-container {
+    display: flex;
+    flex: 1;
+    width: 100vw;
+    overflow: hidden;
+}
+
+.editor-pane, .preview-pane {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0; /* Safeguard against flex item blowouts */
+    height: 100%;
+}
+
+/* Left Panel Boundary */
+.editor-pane {
+    border-right: 2px solid var(--border-color);
+    background-color: var(--editor-bg);
+}
+
+/* --- Tabs Navigation Layout --- */
+.editor-tabs {
+    display: flex;
+    background-color: #1e1e1e;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.tab-button {
+    background-color: var(--tab-bg-inactive);
+    color: var(--text-muted);
+    border: none;
+    border-right: 1px solid var(--border-color);
+    padding: 10px 25px;
+    font-family: var(--font-family-sans);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+
+.tab-button:hover {
+    background-color: #2a2a2a;
+    color: #fff;
+}
+
+.tab-button.active {
+    background-color: var(--tab-bg-active);
+    color: #fff;
+    border-top: 2px solid var(--accent-color);
+}
+
+/* --- Editor Workspace --- */
+.editor-wrapper {
+    position: relative;
+    flex: 1;
+    overflow: hidden;
+}
+
+/* Overlay Layer Alignment Rules */
+.code-editor, #html-highlight, #css-highlight, #js-highlight {
     margin: 0;
-    padding: 10px;
-    padding-left: 60px; /* Space for line numbers */
+    padding: 15px 15px 15px 70px; /* Large left indent to make room for line numbers */
     border: none;
     outline: none;
     resize: none;
-
-    /* Font and text styling must be identical */
-    font-family: var(--font-family-mono);
-    font-size: 16px;
-    line-height: 1.5;
-    tab-size: 4;
-    -moz-tab-size: 4;
-
-    /* Sizing and positioning */
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    overflow: auto; /* Enable scrolling for each layer */
+    font-family: var(--font-family-mono);
+    font-size: 15px;
+    line-height: 1.5;
+    tab-size: 4;
+    white-space: pre;
+    overflow: auto;
 }
 
-#codeInput {
+/* Textarea Layer (Top Interactive Deck) */
+.code-editor {
     z-index: 2;
-    color: transparent; /* Hide the actual textarea text */
     background: transparent;
-    caret-color: var(--caret-color); /* Make the cursor visible */
-    white-space: pre; /* Prevent wrapping */
-    word-wrap: normal;
+    color: var(--text-main); /* Fallback legible text stream */
+    caret-color: var(--caret-color);
 }
 
-#highlighting {
-    z-index: 1;
-    pointer-events: none; /* Allow clicks to pass through to the textarea */
-    white-space: pre; /* Prevent wrapping */
-    word-wrap: normal;
-}
-
-#highlighting-content {
-    display: block;
-    min-height: 100%;
-}
-
-/* --- Line Numbers --- */
+/* --- Line Number Gutter --- */
 .line-numbers {
     position: absolute;
     top: 0;
     left: 0;
-    width: 60px;
+    width: 55px;
     height: 100%;
-    padding: 10px 0;
+    padding: 15px 0;
     text-align: right;
     font-family: var(--font-family-mono);
-    font-size: 16px;
+    font-size: 15px;
     line-height: 1.5;
     color: var(--line-number-color);
-    background-color: var(--editor-bg-color);
-    user-select: none; /* Prevent selecting line numbers */
-    z-index: 3; /* Above editor layers */
-    border-right: 1px solid var(--panel-border-color);
-    overflow: hidden; /* Hide overflowing numbers if font is too large */
+    background-color: #1e1e1e;
+    user-select: none;
+    z-index: 3;
+    border-right: 1px solid var(--border-color);
+    overflow: hidden;
 }
 
 .line-numbers span {
     display: block;
-    padding-right: 15px;
+    padding-right: 12px;
 }
 
-
-/* --- Preview Area --- */
-.preview-area {
-    flex-grow: 1;
-    background-color: var(--preview-bg-color);
+/* --- Right Side Preview Workspace --- */
+.preview-pane {
+    background-color: #ffffff;
 }
 
-#preview-frame {
-    width: 100%;
-    height: 100%;
+.preview-toolbar {
+    background-color: #333333;
+    color: #fff;
+    padding: 8px 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Modern Minimal Clear Button Custom Styling */
+#clear-editor-btn {
+    background-color: #e04444;
+    color: white;
     border: none;
+    padding: 4px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.75rem;
+    transition: background 0.2s;
 }
 
-/* --- Syntax Highlighting Tokens --- */
-.token-comment { color: var(--token-comment); font-style: italic; }
-.token-punctuation { color: var(--token-punctuation); }
-.token-tag { color: var(--token-tag); }
-.token-attr-name { color: var(--token-attr-name); }
-.token-attr-value, .token-string { color: var(--token-attr-value); }
-.token-selector { color: var(--token-selector); }
-.token-property { color: var(--token-property); }
-.token-keyword { color: var(--token-keyword); }
-.token-function { color: var(--token-function); }
-.token-number { color: var(--token-number); }
-.token-operator { color: var(--token-punctuation); }
-.token-entity { color: var(--token-entity); } /* For HTML entities like &nbsp; */
-
-
-/* --- Custom Scrollbar --- */
-textarea::-webkit-scrollbar,
-pre::-webkit-scrollbar {
-    width: 12px;
-    height: 12px;
+#clear-editor-btn:hover {
+    background-color: #ff5252;
 }
 
-textarea::-webkit-scrollbar-track,
-pre::-webkit-scrollbar-track {
-    background: var(--scrollbar-track-color);
+.preview-frame {
+    width: 100%;
+    flex: 1;
+    border: none;
+    background-color: #ffffff;
 }
 
-textarea::-webkit-scrollbar-thumb,
-pre::-webkit-scrollbar-thumb {
-    background: var(--scrollbar-thumb-color);
-    border-radius: 6px;
-    border: 3px solid var(--scrollbar-track-color);
-}
-
-textarea::-webkit-scrollbar-thumb:hover,
-pre::-webkit-scrollbar-thumb:hover {
-    background: #777;
-}
+/* --- Scrollbar Customizations --- */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--bg-dark); }
+::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb-color); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #666; }

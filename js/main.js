@@ -1,20 +1,12 @@
-```javascript
 /**
  * @file Main application logic for the in-browser code editor.
- * @description This script initializes the code editors, handles user input,
- *              updates the real-time preview, and manages syntax highlighting
- *              and line numbering.
+ * @description Refactored to support a single textarea with tabbed multi-language storage,
+ * persisting data via localStorage, and a clean editor reset.
  */
 
 import { highlight } from './syntax-highlighter.js';
 import { TAB_SIZE, DEBOUNCE_DELAY } from './config.js';
 
-/**
- * A simple debounce function to limit the rate at which a function gets called.
- * @param {Function} func The function to debounce.
- * @param {number} delay The debounce delay in milliseconds.
- * @returns {Function} The debounced function.
- */
 const debounce = (func, delay) => {
     let timeoutId;
     return (...args) => {
@@ -26,37 +18,33 @@ const debounce = (func, delay) => {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
+    // --- State Management ---
+    // This object holds the raw text for all three panels in memory
+    let codeState = {
+        html: '\n<h1>Hello World</h1>',
+        css: '/* Write your CSS here */\nh1 {\n    color: slateblue;\n}',
+        js: '// Write your JavaScript here\nconsole.log("Hello from the editor!");'
+    };
+
+    let currentLang = 'html'; // Tracks which tab is currently viewed
+
     // --- DOM Element Selection ---
     const elements = {
-        html: {
-            editor: document.getElementById('html-editor'),
-            highlight: document.getElementById('html-highlight'),
-            lineNumbers: document.getElementById('html-line-numbers'),
-        },
-        css: {
-            editor: document.getElementById('css-editor'),
-            highlight: document.getElementById('css-highlight'),
-            lineNumbers: document.getElementById('css-line-numbers'),
-        },
-        js: {
-            editor: document.getElementById('js-editor'),
-            highlight: document.getElementById('js-highlight'),
-            lineNumbers: document.getElementById('js-line-numbers'),
-        },
+        editor: document.getElementById('code-editor'),
+        lineNumbers: document.getElementById('line-numbers'),
         previewFrame: document.getElementById('preview-frame'),
+        tabs: {
+            html: document.getElementById('html-tab'),
+            css: document.getElementById('css-tab'),
+            js: document.getElementById('js-tab')
+        }
     };
 
     /**
-     * Updates the preview iframe with the current code from all editors.
-     * This function is debounced to prevent excessive updates while typing,
-     * which improves performance.
+     * Updates the preview iframe with the current code from state.
      */
     const updatePreview = debounce(() => {
         if (!elements.previewFrame) return;
-
-        const htmlCode = elements.html.editor.value;
-        const cssCode = elements.css.editor.value;
-        const jsCode = elements.js.editor.value;
 
         const sourceDocument = `
             <!DOCTYPE html>
@@ -66,14 +54,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
                 <title>Live Preview</title>
                 <style>
-                    ${cssCode}
+                    ${codeState.css}
                 </style>
             </head>
             <body>
-                ${htmlCode}
+                ${codeState.html}
                 <script>
                     try {
-                        ${jsCode}
+                        ${codeState.js}
                     } catch (e) {
                         console.error("Error in user script:", e);
                     }
@@ -86,59 +74,57 @@ document.addEventListener('DOMContentLoaded', () => {
     }, DEBOUNCE_DELAY);
 
     /**
-     * Updates the line numbers for a given editor.
-     * @param {HTMLTextAreaElement} editor - The textarea element.
-     * @param {HTMLElement} lineNumbersEl - The element to display line numbers in.
+     * Updates the line numbers inside the sidebar gutter.
      */
-    const updateLineNumbers = (editor, lineNumbersEl) => {
-        const lineCount = editor.value.split('\n').length;
-        const lastKnownLineCount = parseInt(lineNumbersEl.dataset.lineCount || '0', 10);
-
-        // Avoid unnecessary DOM manipulation if the line count hasn't changed.
-        if (lineCount === lastKnownLineCount) {
-            return;
+    const updateLineNumbers = () => {
+        if (!elements.editor || !elements.lineNumbers) return;
+        const lineCount = elements.editor.value.split('\n').length;
+        
+        let lineNumbersHTML = '';
+        for (let i = 1; i <= lineCount; i++) {
+            lineNumbersHTML += `<span>${i}</span>`;
         }
-
-        const lines = Array.from({ length: lineCount }, (_, i) => i + 1).join('\n');
-        lineNumbersEl.textContent = lines;
-        lineNumbersEl.dataset.lineCount = lineCount;
+        elements.lineNumbers.innerHTML = lineNumbersHTML;
     };
 
     /**
-     * Handles input events for a specific editor, updating highlighting and line numbers.
-     * @param {object} editorElements - The collection of elements for one language.
-     * @param {string} language - The language of the editor ('html', 'css', 'js').
+     * Handles typing in the active editor panel
      */
-    const handleEditorInput = (editorElements, language) => {
-        const code = editorElements.editor.value;
+    const handleEditorInput = () => {
+        // 1. Update our central state object with what the user typed
+        codeState[currentLang] = elements.editor.value;
         
-        // Update syntax highlighting. Use innerHTML as it contains styled spans.
-        // Append a newline to fix a scrolling issue where the last line is not visible.
-        editorElements.highlight.innerHTML = highlight(code, language) + '\n';
-        
-        // Update line numbers
-        updateLineNumbers(editorElements.editor, editorElements.lineNumbers);
-        
-        // Trigger the debounced preview update
+        // 2. Refresh side components
+        updateLineNumbers();
         updatePreview();
+
+        // 3. === FEATURE REQUIREMENT: Persist data locally ===
+        localStorage.setItem('in_browser_editor_code', JSON.stringify(codeState));
     };
 
     /**
-     * Synchronizes the scroll position of the editor, highlighter, and line numbers.
-     * @param {Event} e - The scroll event object.
-     * @param {object} editorElements - The collection of elements for one language.
+     * Switches the active language tab layout
      */
-    const syncScroll = (e, editorElements) => {
-        const { scrollTop, scrollLeft } = e.target;
-        editorElements.highlight.scrollTop = scrollTop;
-        editorElements.highlight.scrollLeft = scrollLeft;
-        editorElements.lineNumbers.scrollTop = scrollTop;
+    const switchTab = (nextLang) => {
+        if (!elements.tabs[nextLang] || !elements.editor) return;
+
+        // Manage active classes on tabs
+        Object.keys(elements.tabs).forEach(lang => {
+            elements.tabs[lang].classList.remove('active');
+            elements.tabs[lang].setAttribute('aria-selected', 'false');
+        });
+        elements.tabs[nextLang].classList.add('active');
+        elements.tabs[nextLang].setAttribute('aria-selected', 'true');
+
+        // Swap out the text contents for the next target language
+        currentLang = nextLang;
+        elements.editor.value = codeState[currentLang];
+        
+        updateLineNumbers();
     };
 
     /**
-     * Handles the 'keydown' event, specifically for intercepting the Tab key
-     * to insert spaces instead of changing focus.
-     * @param {KeyboardEvent} e - The keyboard event object.
+     * Intercepts standard Tab keys to insert structural spaces instead
      */
     const handleTabKey = (e) => {
         if (e.key === 'Tab') {
@@ -146,51 +132,71 @@ document.addEventListener('DOMContentLoaded', () => {
             const editor = e.target;
             const start = editor.selectionStart;
             const end = editor.selectionEnd;
-            const tabCharacter = ' '.repeat(TAB_SIZE);
+            const tabCharacter = ' '.repeat(TAB_SIZE || 4);
 
-            // Insert tab character at the current cursor position
             editor.value = editor.value.substring(0, start) + tabCharacter + editor.value.substring(end);
-
-            // Move the cursor to the position after the inserted tab
             editor.selectionStart = editor.selectionEnd = start + tabCharacter.length;
             
-            // Manually trigger an input event to update highlighting and preview
-            editor.dispatchEvent(new Event('input', { bubbles: true, cancelable: true }));
+            handleEditorInput();
         }
     };
 
     /**
-     * Initializes all editors, setting up event listeners and initial state.
+     * Initializes state from storage or attaches global interactions
      */
     const initializeEditors = () => {
-        // Check if all required elements are present
-        if (!elements.html.editor || !elements.css.editor || !elements.js.editor || !elements.previewFrame) {
-            console.error('One or more required editor elements are missing from the DOM.');
+        if (!elements.editor || !elements.previewFrame) {
+            console.error('Core DOM elements missing.');
             return;
         }
 
-        Object.entries(elements).forEach(([lang, editorElements]) => {
-            // Skip the previewFrame object
-            if (lang === 'previewFrame') return;
+        // === this is the required feature ' Load local content on startup ' ===
+        const savedCode = localStorage.getItem('in_browser_editor_code');
+        if (savedCode) {
+            try {
+                const parsed = JSON.parse(savedCode);
+                if (parsed.html !== undefined) codeState.html = parsed.html;
+                if (parsed.css !== undefined) codeState.css = parsed.css;
+                if (parsed.js !== undefined) codeState.js = parsed.js;
+            } catch (e) {
+                console.error("Failed parsing localStorage state:", e);
+            }
+        }
 
-            const { editor } = editorElements;
+        // Set attributes
+        elements.editor.setAttribute('spellcheck', 'false');
 
-            // Set common attributes for a better coding experience
-            editor.setAttribute('spellcheck', 'false');
-            editor.setAttribute('autocorrect', 'off');
-            editor.setAttribute('autocapitalize', 'off');
+        // Core Event Bindings
+        elements.editor.addEventListener('input', handleEditorInput);
+        elements.editor.addEventListener('keydown', handleTabKey);
 
-            // Set up event listeners
-            editor.addEventListener('input', () => handleEditorInput(editorElements, lang));
-            editor.addEventListener('scroll', (e) => syncScroll(e, editorElements));
-            editor.addEventListener('keydown', handleTabKey);
-
-            // Perform an initial update on page load to process any pre-filled content
-            handleEditorInput(editorElements, lang);
+        // Bind language tabs buttons click events
+        Object.entries(elements.tabs).forEach(([lang, tabElement]) => {
+            if (tabElement) {
+                tabElement.addEventListener('click', () => switchTab(lang));
+            }
         });
+
+        // Seed initial panel presentation data
+        elements.editor.value = codeState[currentLang];
+        updateLineNumbers();
+        updatePreview();
     };
 
-    // --- Application Initialization ---
+    // Initialize application execution
     initializeEditors();
+  
+    // === designed and wired a ' Clear Editor ' button into preview toolbar header==
+    const clearBtn = document.getElementById('clear-editor-btn');
+    if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to clear your code? This resets all data.')) {
+                localStorage.removeItem('in_browser_editor_code');
+                codeState = { html: '', css: '', js: '' };
+                elements.editor.value = '';
+                updateLineNumbers();
+                updatePreview();
+            }
+        });
+    }
 });
-```
